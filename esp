@@ -1,0 +1,78 @@
+getgenv().Toggle = true -- This toggles the ESP, turning it to false will turn it off
+getgenv().TC = false -- This toggles team check, turning it on will turn on team check
+local PlayerName = "Name" -- You can decide if you want the Player's name to be a display name which is "DisplayName", or username which is "Name"
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function createOrUpdateESP(player, distance)
+    local character = player.Character
+    if not character then return end
+    
+    local esp = character:FindFirstChild("Totally NOT Esp")
+    local icon = character:FindFirstChild("Icon")
+    
+    if not esp then
+        -- Create ESP highlight
+        esp = Instance.new("Highlight")
+        esp.Name = "Totally NOT Esp"
+        esp.Adornee = character
+        esp.Archivable = true
+        esp.Enabled = true
+        esp.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        esp.OutlineColor = Color3.fromRGB(255, 255, 255)
+        esp.OutlineTransparency = 0
+        esp.Parent = character
+    end
+    
+    -- Update ESP properties
+    esp.FillColor = player.TeamColor.Color
+    esp.FillTransparency = 0.5
+    
+    if not icon then
+        -- Create BillboardGui for name and distance
+        icon = Instance.new("BillboardGui")
+        icon.Name = "Icon"
+        icon.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        icon.Active = true
+        icon.AlwaysOnTop = true
+        icon.ExtentsOffset = Vector3.new(0, 1, 0)
+        icon.LightInfluence = 1.000
+        icon.Size = UDim2.new(0, 800, 0, 50)
+        icon.Parent = character
+        
+        local espText = Instance.new("TextLabel")
+        espText.Name = "ESP Text"
+        espText.Parent = icon
+        espText.BackgroundColor3 = player.TeamColor.Color
+        espText.BackgroundTransparency = 1.000
+        espText.Size = UDim2.new(0, 800, 0, 50)
+        espText.Font = Enum.Font.SciFi
+        espText.Text = player[PlayerName].." | Distance: "..distance
+        espText.TextColor3 = player.TeamColor.Color
+        espText.TextSize = 18.000
+        espText.TextWrapped = true
+    else
+        -- Update ESP text
+        icon.ESPText.Text = player[PlayerName].." | Distance: "..distance
+    end
+end
+
+while true do
+    if not getgenv().Toggle then break end
+    if not LocalPlayer.Character then break end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local distance = math.floor((LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).magnitude)
+                
+                if (not getgenv().TC or player.TeamColor ~= LocalPlayer.TeamColor) then
+                    createOrUpdateESP(player, distance)
+                end
+            end
+        end
+    end
+    
+    wait()
+end
